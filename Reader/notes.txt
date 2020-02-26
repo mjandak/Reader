@@ -1,0 +1,28 @@
+﻿Generate EF stuff from db using PCM:
+Install-Package Microsoft.EntityFrameworkCore.Sqlite
+Install-Package Microsoft.EntityFrameworkCore.Tools
+Scaffold-DbContext 'data source=C:\STUFF\programming\reader\Reader\db' Microsoft.EntityFrameworkCore.Sqlite -Context Entities -OutputDir SQLite\ORM
+
+WPF Validation
+Basically, we can achieve data validation in two ways:
+Part 1 - Implements IDataErrorInfo
+Part 2 - Implements INotifyDataErrorInfo (příklad s DataAnotations https://www.c-sharpcorner.com/UploadFile/tirthacs/inotifydataerrorinfo-in-wpf/)
+
+ValidatesOnNotifyDataErrors and ValidatesOnDataErrors are used when you want a XAML bound control to validate its input 
+based on an interface implemented in the ViewModel/Model, 
+	for ValidatesOnNotifyDataErrors that interface is INotifyDataErrorInfo 
+	and for ValidatesOnDataErrors it is IDataErrorInfo.
+
+ValidatesOnNotifyDataErrors tells the binding engine to watch for validation errors 
+reported by an implementation of INotifyDataErrorInfo.
+NotifyOnValidationError on the other hand advises the engine to raise a special event when a validation error happened; 
+this event in turn can be captured by other UI elements to also react to the error.
+
+ValidatioRule.ValidationStep
+	RawProposedValue - Runs the ValidationRule before any conversion occurs.
+	ConvertedProposedValue - Runs the ValidationRule after the value is converted.
+	UpdatedValue - Runs the ValidationRule after the source is updated.
+	CommittedValue - Runs the ValidationRule after the value has been committed to the source.
+By default, it's RawProposedValue, which prevents the binding to source from ever occurring
+
+Validation processing proceeds as follows => https://www.codeproject.com/Articles/863291/Validation-in-WPF
