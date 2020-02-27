@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -34,6 +35,10 @@ namespace Reader
 
     public class HtmlToXaml : IValueConverter
     {
+        /// <summary>
+        /// device-independent units (1/96th inch per unit)
+        /// </summary>
+        private const double maxImgHeight = 200;
         private static Dictionary<string, TextBlock> cache = new Dictionary<string, TextBlock>();
 
         #region IValueConverter Members
@@ -81,34 +86,29 @@ namespace Reader
             else if (node.Name.ToLower() == "img")
             {
                 var image = new Image();
-                var imageUrl = node.Attributes["src"].Value;
-
-                //WebRequest request = System.Net.WebRequest.Create(imageUrl);
-                //WebResponse response = request.GetResponse();
-                //Stream responseStream = response.GetResponseStream();
+                string imageUrl = node.Attributes["src"].Value;
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                //bitmap.StreamSource = responseStream;
                 bitmap.UriSource = new Uri(string.Format(imageUrl), UriKind.Absolute);
+                bitmap.CreateOptions = BitmapCreateOptions.None;
+                bitmap.CacheOption = BitmapCacheOption.None;
                 bitmap.EndInit();
 
                 bitmap.DownloadCompleted += new EventHandler(
                 (object sender, EventArgs e) =>
                 {
-                    const double maxHeight = 200;
                     BitmapImage initBitmap = (BitmapImage)sender;
-                    double adjust = maxHeight / initBitmap.Height;
-                    if (adjust < 1)
-                    {
-                        image.MaxHeight = image.Height = adjust * initBitmap.Height;
-                        image.MaxWidth = image.Width = adjust * initBitmap.Width;
-                    }
-                    image.Stretch = Stretch.UniformToFill;
+                    double adjust = maxImgHeight / initBitmap.Height;
+                    if (adjust > 1) adjust = 1;
+                    image.Height = adjust * initBitmap.Height;
+                    image.Width = adjust * initBitmap.Width;
                     image.Source = initBitmap;
+                    Debug.WriteLine($"Image dowloaded: {imageUrl}, height adjust: {initBitmap.Height} >> {image.Height}, width adjust: {initBitmap.Width} >> {image.Width}");
                 });
 
                 txtBlock.Inlines.Add(image);
                 txtBlock.Inlines.Add(new LineBreak());
+                Debug.WriteLine($"Image added: {imageUrl}");
             }
             else if (node.Name.ToLower() == "a")
             {
