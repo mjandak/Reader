@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <RootNamespace>Reader</RootNamespace>
+    <ApplicationIcon>newspaper-folded-svgrepo-com.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
