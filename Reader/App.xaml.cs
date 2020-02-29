@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Reader.DAL;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -16,7 +17,7 @@ namespace Reader
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            DAL.Repository.Instance = new SQLite.Repository();
+            Repository.Instance = RepositoryFactory.GetRepositoryInstance();
         }
 
         private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)

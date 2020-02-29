@@ -6,18 +6,20 @@ namespace Reader.DAL
 {
     public class RepositoryFactory
     {
+        private const string repositoryConfigKey = "RepositoryType";
+
         public static IRepository GetRepositoryInstance()
         {
             try
             {
-                string typeName = ConfigurationManager.AppSettings["RepositoryType"];
-                Type type = Type.GetType(typeName);
-                if (type == null) throw new Exception("Could not resolve RepositoryType in AppSettinggs.");
+                string repositoryTypeName = ConfigurationManager.AppSettings[repositoryConfigKey];
+                Type repositoryType = Type.GetType(repositoryTypeName);
+                if (repositoryType == null) throw new Exception($"Couldn't find {repositoryTypeName} type.");
                 Type IRepositoryType = typeof(IRepository);
-                if (type.GetInterfaces().FirstOrDefault(t => t == IRepositoryType) == null)
-                    throw new Exception("RepositoryType must implement IRepository");
+                if (repositoryType.GetInterfaces().FirstOrDefault(t => t == IRepositoryType) == null)
+                    throw new Exception($"{repositoryTypeName} has to implement {nameof(IRepository)} interface.");
 
-                return (IRepository)Activator.CreateInstance(type);
+                return (IRepository)Activator.CreateInstance(repositoryType);
             }
             catch (Exception e)
             {
