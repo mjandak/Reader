@@ -8,17 +8,17 @@ namespace Reader
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="T">Type of message parameter.</typeparam>
-    public class MessageBus<T>
+    /// <typeparam name="T">Message type.</typeparam>
+    public class MsgBus<T>
     {
-        private static MessageBus<T> _instance = null;
+        private static MsgBus<T> _instance = null;
         private static readonly object _lock = new object();
 
-        protected MessageBus()
+        protected MsgBus()
         {
         }
 
-        public static MessageBus<T> Instance
+        public static MsgBus<T> Instance
         {
             get
             {
@@ -26,7 +26,7 @@ namespace Reader
                 {
                     if (_instance == null)
                     {
-                        _instance = new MessageBus<T>();
+                        _instance = new MsgBus<T>();
                     }
                     return _instance;
                 }

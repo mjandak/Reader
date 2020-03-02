@@ -21,11 +21,11 @@
         </Grid.ColumnDefinitions>
         <Button Name="btnNewFeed" Grid.Column="0"  Grid.Row="0" Content="New feed" HorizontalAlignment="Left" VerticalAlignment="Center" Click="btnNewFeed_Click" />
         <Button Name="btnRefreshAllFeeds" Content="Refresh all feeds" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" Margin="70,0,0,0" VerticalAlignment="Center" Command="{Binding RefreshFeeds}" />
-        <TreeView Grid.Row="1" HorizontalAlignment="Stretch" Name="treeView1" VerticalAlignment="Top" ItemsSource="{Binding Path=Feeds}">
+        <TreeView Grid.Row="1" HorizontalAlignment="Stretch" Name="treeViewFeeds" VerticalAlignment="Top" ItemsSource="{Binding Path=Feeds}">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type local:FeedVM}" ItemsSource="{Binding Path=Items}">
-                    <WrapPanel>
-                        <Label Content="{Binding Path=Name}">
+                    <DockPanel Width="Auto" HorizontalAlignment="Stretch">
+                        <Label Content="{Binding Path=Name}" DockPanel.Dock="Left">
                             <Label.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Name="menuReresh" Header="Refresh" Command="{Binding RefreshCmd}"></MenuItem>
@@ -34,7 +34,7 @@
                                 </ContextMenu>
                             </Label.ContextMenu>
                         </Label>
-                        <Label Content="Refreshing ..." Foreground="Red">
+                        <Label Content="Refreshing ..." DockPanel.Dock="Left" Foreground="Red">
                             <Label.Style>
                                 <Style TargetType="Label">
                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -46,7 +46,8 @@
                                 </Style>
                             </Label.Style>
                         </Label>
-                    </WrapPanel>
+                        <CheckBox Click="CheckBox_Click" IsChecked="{Binding ExclusivelyInStream}" DockPanel.Dock="Right" HorizontalAlignment="Right" Command="{Binding ExclusiveSwitchedCmd}" />
+                    </DockPanel>
                 </HierarchicalDataTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type local:ItemVM}">
                     <Label Padding="0" Width="250" Name="lblFeedTitle" Content="{Binding Path=Title}">

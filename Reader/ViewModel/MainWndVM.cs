@@ -30,15 +30,20 @@ namespace Reader
         {
             get
             {
-                return new List<ItemVM>(Feeds.SelectMany(f => f.Items).OrderByDescending(i => i.DatePublished));
+                var tmp = Feeds.Where(f => f.ExclusivelyInStream);
+                if (tmp.Count() == 0) tmp = Feeds;
+                return new List<ItemVM>(tmp.SelectMany(f => f.Items).OrderByDescending(i => i.DatePublished));
             }
         }
 
+        public bool MultipleFeedsSelectioON { get; set; }
+
         public MainWndVM()
         {
-            MessageBus<FeedVM.NewFeedSavedEvent>.Instance.MessageRecieved += newFeedSaved;
-            MessageBus<FeedVM.FeedRefreshedEvent>.Instance.MessageRecieved += feedRefreshed;
-            MessageBus<FeedVM.FeedDeletedEvent>.Instance.MessageRecieved += feedDeleted;
+            MsgBus<FeedVM.NewFeedSavedEvent>.Instance.MessageRecieved += newFeedSaved;
+            MsgBus<FeedVM.FeedRefreshedEvent>.Instance.MessageRecieved += feedRefreshed;
+            MsgBus<FeedVM.FeedDeletedEvent>.Instance.MessageRecieved += feedDeleted;
+            MsgBus<FeedVM.FeedExclusiveSwitchedEvent>.Instance.MessageRecieved += feedExclusive;
             RefreshFeeds = new DelegateCommand(refreshFeeds, x => _feeds.Count > 0);
             Feeds = new ObservableCollection<FeedVM>();
             Feeds.CollectionChanged += (s, e) => NotifyPropertyChanged(nameof(ItemsStream));
@@ -50,14 +55,32 @@ namespace Reader
             }
         }
 
-        private void feedRefreshed(FeedVM.FeedRefreshedEvent obj)
+        private void feedExclusive(FeedVM.FeedExclusiveSwitchedEvent e)
+        {
+            if (!e.Feed.ExclusivelyInStream)
+            {
+                NotifyPropertyChanged(nameof(ItemsStream));
+                return;
+            }
+
+            if (!MultipleFeedsSelectioON)
+            {
+                foreach (FeedVM item in Feeds)
+                {
+                    item.ExclusivelyInStream = (item == e.Feed);
+                }
+            }
+            NotifyPropertyChanged(nameof(ItemsStream));
+        }
+
+        private void feedRefreshed(FeedVM.FeedRefreshedEvent e)
         {
             NotifyPropertyChanged(nameof(ItemsStream));
         }
 
-        private void feedDeleted(FeedVM.FeedDeletedEvent obj)
+        private void feedDeleted(FeedVM.FeedDeletedEvent e)
         {
-            Feeds.Remove(obj.Feed);
+            Feeds.Remove(e.Feed);
             NotifyPropertyChanged(nameof(ItemsStream));
         }
 

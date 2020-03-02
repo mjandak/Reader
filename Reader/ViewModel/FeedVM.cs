@@ -52,6 +52,17 @@ namespace Reader
             }
         }
 
+        private bool exclusivelyInStream;
+        public bool ExclusivelyInStream
+        {
+            get => exclusivelyInStream;
+            set
+            {
+                exclusivelyInStream = value;
+                PropChanged(nameof(ExclusivelyInStream));
+            }
+        }
+
         public List<ItemVM> Items
         {
             get { return _items; }
@@ -86,6 +97,12 @@ namespace Reader
             private set;
         }
 
+        public ICommand ExclusiveSwitchedCmd
+        {
+            get;
+            private set;
+        }
+
         public override bool IsValid
         {
             get
@@ -97,14 +114,14 @@ namespace Reader
         }
 
         bool _refreshing;
-        public bool Refreshing 
-        { 
+        public bool Refreshing
+        {
             get
             {
                 return _refreshing;
             }
-            private set 
-            { 
+            private set
+            {
                 _refreshing = value;
                 PropChanged(nameof(Refreshing));
             }
@@ -117,6 +134,7 @@ namespace Reader
             SaveCmd = new DelegateCommand(Save);
             EditCmd = new DelegateCommand(Edit);
             DeleteCmd = new DelegateCommand(Delete);
+            ExclusiveSwitchedCmd = new DelegateCommand(ExclusiveSwitched);
 
             _items = new List<ItemVM>();
             foreach (DAL.Item item in _feed.Items)
@@ -160,7 +178,7 @@ namespace Reader
             if (_feed.Id == null)
             {
                 DAL.Repository.Instance.AddFeed(_feed);
-                MessageBus<NewFeedSavedEvent>.Instance.SendMessage(new NewFeedSavedEvent(_feed));
+                MsgBus<NewFeedSavedEvent>.Instance.SendMessage(new NewFeedSavedEvent(_feed));
                 return;
             }
             DAL.Repository.Instance.UpdateFeed(_feed);
@@ -168,20 +186,25 @@ namespace Reader
 
         public void Edit()
         {
-            MessageBus<FeedEditEvent>.Instance.SendMessage(new FeedEditEvent(this));
+            MsgBus<FeedEditEvent>.Instance.SendMessage(new FeedEditEvent(this));
         }
 
         private void Delete()
         {
             Repository.Instance.DeleteFeed(_feed.Id.Value);
-            MessageBus<FeedDeletedEvent>.Instance.SendMessage(new FeedDeletedEvent(this));
+            MsgBus<FeedDeletedEvent>.Instance.SendMessage(new FeedDeletedEvent(this));
+        }
+
+        private void ExclusiveSwitched()
+        {
+            MsgBus<FeedExclusiveSwitchedEvent>.Instance.SendMessage(new FeedExclusiveSwitchedEvent(this));
         }
 
         private void fd_DownloadFinished(DAL.Feed feed)
         {
             DAL.Repository.Instance.UpdateFeed(feed);
             Refreshing = false;
-            MessageBus<FeedRefreshedEvent>.Instance.SendMessage(new FeedRefreshedEvent(this));
+            MsgBus<FeedRefreshedEvent>.Instance.SendMessage(new FeedRefreshedEvent(this));
         }
 
         public class NewFeedSavedEvent
@@ -216,6 +239,15 @@ namespace Reader
         public class FeedDeletedEvent
         {
             public FeedDeletedEvent(FeedVM feed)
+            {
+                Feed = feed;
+            }
+            public FeedVM Feed { get; }
+        }
+
+        public class FeedExclusiveSwitchedEvent
+        {
+            public FeedExclusiveSwitchedEvent(FeedVM feed)
             {
                 Feed = feed;
             }

@@ -41,7 +41,7 @@ namespace Reader
 
         public ItemVM(DAL.Item item)
         {
-            OpenCmd = new DelegateCommand(() => MessageBus<ItemOpenEvent>.Instance.SendMessage(new ItemOpenEvent(Link)));
+            OpenCmd = new DelegateCommand(() => MsgBus<ItemOpenEvent>.Instance.SendMessage(new ItemOpenEvent(Link)));
             _item = item;
         }
 

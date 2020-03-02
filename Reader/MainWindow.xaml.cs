@@ -26,8 +26,8 @@ namespace Reader
         {
             InitializeComponent();
             DataContext = new MainWndVM();
-            MessageBus<ItemOpenEvent>.Instance.MessageRecieved += feedItemOpen;
-            MessageBus<FeedVM.FeedEditEvent>.Instance.MessageRecieved += feedEdit;
+            MsgBus<ItemOpenEvent>.Instance.MessageRecieved += feedItemOpen;
+            MsgBus<FeedVM.FeedEditEvent>.Instance.MessageRecieved += feedEdit;
         }
 
         private void feedEdit(FeedVM.FeedEditEvent e)
@@ -83,6 +83,11 @@ namespace Reader
             var w = new FeedDetailWindow();
             w.DataContext = new FeedVM(new DAL.Feed());
             w.ShowDialog();
+        }
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            ((MainWndVM)DataContext).MultipleFeedsSelectioON = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
         }
     }
 }
