@@ -125,11 +125,11 @@ namespace Reader
 
         private async void DownloadImage(string imageUrl, Image image)
         {
-            Debug.WriteLine($"Starting to download image {imageUrl}. ({Thread.CurrentThread.ManagedThreadId})");
-            var webClient = new WebClient();
+            Debug.WriteLine($"Starting to download image {imageUrl}.");
+            using var webClient = new WebClient();
             var imageBytes = await webClient.DownloadDataTaskAsync(imageUrl);
 
-            Debug.WriteLine($"Image {imageUrl} downloaded. ({Thread.CurrentThread.ManagedThreadId})");
+            Debug.WriteLine($"Image {imageUrl} downloaded.");
             var ms = new MemoryStream(imageBytes);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
