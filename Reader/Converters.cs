@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -16,9 +17,9 @@ namespace Reader
     [ValueConversion(typeof(bool), typeof(bool))]
     public class Not : IValueConverter
     {
-        #region IValueConverter Members
+        #region IValueConverter Members
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (targetType != typeof(bool)) throw new InvalidOperationException("The target must be a boolean");
             return !(bool)value;
@@ -30,20 +31,20 @@ namespace Reader
             return !(bool)value;
         }
 
-        #endregion
-    }
+        #endregion
+    }
 
     public class HtmlToXaml : IValueConverter
     {
-        /// <summary>
-        /// device-independent units (1/96th inch per unit)
-        /// </summary>
-        private const double maxImgHeight = 200;
+        /// <summary>
+        /// device-independent units (1/96th inch per unit)
+        /// </summary>
+        private const double maxImgHeight = 200;
         private static Dictionary<string, TextBlock> cache = new Dictionary<string, TextBlock>();
 
-        #region IValueConverter Members
+        #region IValueConverter Members
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value == null) return null;
             if (cache.ContainsKey(value.ToString())) return cache[value.ToString()];
@@ -62,9 +63,9 @@ namespace Reader
             throw new NotImplementedException();
         }
 
-        #endregion
+        #endregion
 
-        private TextBlock txtBlock;
+        private TextBlock txtBlock;
 
         private void ProcessNode(XmlNode node)
         {
@@ -85,30 +86,14 @@ namespace Reader
             }
             else if (node.Name.ToLower() == "img")
             {
+
                 var image = new Image();
                 string imageUrl = node.Attributes["src"].Value;
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(string.Format(imageUrl), UriKind.Absolute);
-                bitmap.CreateOptions = BitmapCreateOptions.None;
-                bitmap.CacheOption = BitmapCacheOption.None;
-                bitmap.EndInit();
 
-                bitmap.DownloadCompleted += new EventHandler(
-                (object sender, EventArgs e) =>
-                {
-                    BitmapImage initBitmap = (BitmapImage)sender;
-                    double adjust = maxImgHeight / initBitmap.Height;
-                    if (adjust > 1) adjust = 1;
-                    image.Height = adjust * initBitmap.Height;
-                    image.Width = adjust * initBitmap.Width;
-                    image.Source = initBitmap;
-                    Debug.WriteLine($"Image dowloaded: {imageUrl}, height adjust: {initBitmap.Height} >> {image.Height}, width adjust: {initBitmap.Width} >> {image.Width}");
-                });
+                DownloadImage(imageUrl, image);
 
                 txtBlock.Inlines.Add(image);
                 txtBlock.Inlines.Add(new LineBreak());
-                Debug.WriteLine($"Image added: {imageUrl}");
             }
             else if (node.Name.ToLower() == "a")
             {
@@ -123,9 +108,35 @@ namespace Reader
 
         }
 
+        private void Bitmap_DecodeFailed(object sender, ExceptionEventArgs e)
+        {
+        }
+
+        private void Bitmap_DownloadFailed(object sender, ExceptionEventArgs e)
+        {
+
+        }
+
         private string Escape(string html)
         {
             return html.Replace("&", "&amp;");
+        }
+
+
+        private async void DownloadImage(string imageUrl, Image image)
+        {
+            Debug.WriteLine($"Starting to download image {imageUrl}. ({Thread.CurrentThread.ManagedThreadId})");
+            var webClient = new WebClient();
+            var imageBytes = await webClient.DownloadDataTaskAsync(imageUrl);
+
+            Debug.WriteLine($"Image {imageUrl} downloaded. ({Thread.CurrentThread.ManagedThreadId})");
+            var ms = new MemoryStream(imageBytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = ms;
+            bitmap.EndInit();
+
+            image.Source = bitmap;
         }
     }
 }
